@@ -1,19 +1,27 @@
-import express from 'express';
+// app.mjs
+import http from 'http';
+import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-const app = express();
 const port = 3000;
 
-app.use(express.static(__dirname));  // Cambiado para usar __dirname directamente
+const server = http.createServer(async (req, res) => {
+  const filePath = req.url === '/' ? '/index.html' : req.url;
+  const fullPath = join(__dirname, 'public', filePath);
 
-app.get('/', (req, res) => {
-  res.send('app');
+  try {
+    const content = await fs.readFile(fullPath);
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(content);
+  } catch (error) {
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Not Found');
+  }
 });
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Servidor escuchando en el puerto ${port}`);
 });
